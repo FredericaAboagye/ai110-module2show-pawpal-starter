@@ -52,3 +52,18 @@ This project includes several algorithmic improvements beyond the initial skelet
 - Conflict detection: lightweight checks detect overlapping scheduled items and identical due-times across pets and emit warnings.
 
 These features are intentionally simple to keep the system testable and deterministic. Future work can add more sophisticated planners and constraint-solving.
+
+## Testing PawPal+
+
+Run the automated test suite with:
+
+```bash
+python -m pytest
+```
+
+Tests included:
+- Sorting correctness: verifies scheduled items are ordered by start time.
+- Recurrence logic: verifies marking a `daily` task complete creates the next occurrence.
+- Conflict detection: verifies the scheduler flags identical due-time tasks across pets.
+
+Confidence Level: ★★★☆☆ (3/5) — basic behaviors are covered; more edge cases and conflict resolution need tests.
