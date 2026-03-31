@@ -3,6 +3,9 @@ from datetime import date
 
 # import domain classes from the logic layer
 from pawpal_system import Owner, Pet, Task, Scheduler
+import os
+
+DATA_FILE = "data.json"
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -50,11 +53,18 @@ species = st.selectbox("Species", ["dog", "cat", "other"])
 st.markdown("### Pets & Tasks")
 st.caption("Create pets and add tasks to them. These objects persist in `st.session_state`.")
 
-# Create or retrieve Owner in session_state
+# Load persisted owner if exists, else create on demand
 if "owner" not in st.session_state:
-    if st.button("Create owner"):
-        st.session_state.owner = Owner(owner_id="o1", name=owner_name)
-        st.success(f"Created owner: {owner_name}")
+    # attempt to load from disk
+    loaded = Owner.load_from_json(DATA_FILE)
+    if loaded:
+        st.session_state.owner = loaded
+        st.success(f"Loaded owner: {loaded.name} from {DATA_FILE}")
+    else:
+        if st.button("Create owner"):
+            st.session_state.owner = Owner(owner_id="o1", name=owner_name)
+            st.session_state.owner.save_to_json(DATA_FILE)
+            st.success(f"Created owner: {owner_name}")
 else:
     owner: Owner = st.session_state.owner
 
@@ -70,6 +80,7 @@ else:
         pet_id = f"pet{len(owner.pets) + 1}"
         pet = Pet(pet_id=pet_id, name=new_pet_name, species=new_species)
         owner.add_pet(pet)
+        owner.save_to_json(DATA_FILE)
         st.success(f"Added pet {new_pet_name}")
 
     # Show existing pets and allow adding tasks to a selected pet
@@ -95,6 +106,7 @@ else:
             task_id = f"task{sum(len(p.tasks) for p in owner.pets) + 1}"
             t = Task(task_id=task_id, title=task_title, duration_minutes=int(duration), priority=priority_map[priority_label])
             selected_pet.add_task(t)
+            owner.save_to_json(DATA_FILE)
             st.success(f"Added task '{task_title}' to {selected_pet.name}")
 
         # Display pets and their tasks

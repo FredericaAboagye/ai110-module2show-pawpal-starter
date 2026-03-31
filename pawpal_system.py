@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 from datetime import datetime, date, time, timedelta
+import json
+import os
 
 
 @dataclass
@@ -41,6 +43,34 @@ class Task:
         """Reschedule the task to a new datetime by updating `due_time`."""
         self.due_time = new_time
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "duration_minutes": self.duration_minutes,
+            "priority": self.priority,
+            "recurrence": self.recurrence,
+            "due_time": self.due_time.isoformat() if self.due_time else None,
+            "completed": self.completed,
+        }
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "Task":
+        due = None
+        if d.get("due_time"):
+            due = datetime.fromisoformat(d["due_time"])
+        return Task(
+            task_id=d["task_id"],
+            title=d.get("title", ""),
+            description=d.get("description", ""),
+            duration_minutes=d.get("duration_minutes", 0),
+            priority=d.get("priority", 0),
+            recurrence=d.get("recurrence"),
+            due_time=due,
+            completed=d.get("completed", False),
+        )
+
 
 @dataclass
 class Pet:
@@ -67,6 +97,31 @@ class Pet:
                 new_task = t.mark_complete()
                 return new_task
         return None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "pet_id": self.pet_id,
+            "name": self.name,
+            "species": self.species,
+            "breed": self.breed,
+            "age": self.age,
+            "medical_info": self.medical_info,
+            "tasks": [t.to_dict() for t in self.tasks],
+        }
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "Pet":
+        p = Pet(
+            pet_id=d.get("pet_id", ""),
+            name=d.get("name", ""),
+            species=d.get("species"),
+            breed=d.get("breed"),
+            age=d.get("age"),
+            medical_info=d.get("medical_info", {}),
+        )
+        for td in d.get("tasks", []):
+            p.tasks.append(Task.from_dict(td))
+        return p
 
     def remove_task(self, task_id: str) -> None:
         """Remove a Task by `task_id`. No-op if not found."""
@@ -119,6 +174,35 @@ class Owner:
                 continue
             out.append((pet, task))
         return out
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "owner_id": self.owner_id,
+            "name": self.name,
+            "contact_info": self.contact_info,
+            "preferences": self.preferences,
+            "pets": [p.to_dict() for p in self.pets],
+        }
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "Owner":
+        o = Owner(owner_id=d.get("owner_id", ""), name=d.get("name", ""), contact_info=d.get("contact_info", {}), preferences=d.get("preferences", {}))
+        for pd in d.get("pets", []):
+            o.pets.append(Pet.from_dict(pd))
+        return o
+
+    def save_to_json(self, filepath: str) -> None:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True) if os.path.dirname(filepath) else None
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=2)
+
+    @staticmethod
+    def load_from_json(filepath: str) -> Optional["Owner"]:
+        if not os.path.exists(filepath):
+            return None
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return Owner.from_dict(data)
 
     def get_pets(self) -> List[Pet]:
         return self.pets
