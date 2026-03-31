@@ -14,10 +14,19 @@
 
 **b. Design changes**
 
+- No major design changes yet — this is the initial implementation derived from the UML.
 
-- No changes yet. This draft is the initial skeleton mapped directly from the UML.
+- Practical additions made during implementation:
 
-- Next step: ask Copilot to review the skeleton in `#file:pawpal_system.py` and suggest missing relationships or potential bottlenecks (for example: task dependencies, owner-level concurrency constraints, or a need for a `Schedule`/`ScheduledTask` value object).
+-  - Introduced a `ScheduledTask` dataclass returned by the scheduler (implemented as dicts in this phase) so scheduled items are structured and include start/end, `task`, and pet metadata. This keeps the scheduler's output explicit and easier to format or persist.
+-  - Added `Owner.get_all_tasks()` to provide the `Scheduler` an easy, single API to retrieve `(pet, task)` tuples across all pets. This reduced coupling and clarified how the `Scheduler` accesses domain data.
+-  - Implemented a simple, deterministic `Scheduler.generate_daily_plan()` that sorts tasks by priority and due time and schedules them sequentially starting at 09:00. Tasks that don't fit are skipped. This is intentionally simple to keep the first working iteration easy to test.
+
+- Potential next refinements I may make based on AI feedback:
+
+-  - Replace the temporary dict-based schedule with `ScheduledTask` objects everywhere and expose clearer constraints (time windows, owner availability slots).
+-  - Add non-overlap checks for single-owner constraints across multiple pets, and support splitting long tasks or partial scheduling.
+-  - Add a `Schedule` or `PlannerConfig` object to tune weights and allow deterministic unit testing of scheduling heuristics.
 
 ---
 
