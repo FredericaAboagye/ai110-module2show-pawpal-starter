@@ -7,6 +7,8 @@ classDiagram
       +add_pet(pet)
       +remove_pet(pet_id)
       +get_pets()
+      +get_all_tasks()
+      +filter_tasks(completed, pet_name)
     }
 
     class Pet {
@@ -19,6 +21,7 @@ classDiagram
       +add_task(task)
       +remove_task(task_id)
       +upcoming_tasks()
+      +mark_task_complete(task_id)
     }
 
     class Task {
@@ -37,6 +40,9 @@ classDiagram
       +generate_daily_plan(owner, date)
       +explain_plan(plan)
       +score_task(task, constraints)
+      +sort_by_time(plan)
+      +detect_conflicts(plan)
+      +detect_due_time_conflicts(owner)
     }
 
     Owner "1" -- "*" Pet : owns

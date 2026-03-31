@@ -55,10 +55,27 @@
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+- I used Copilot (Inline Chat and Agent modes) throughout the project to brainstorm UML designs, generate class skeletons, suggest scheduling heuristics, and draft tests. The most helpful prompts asked for concrete code patterns ("create a dataclass for Task with X fields") or for short algorithm sketches ("simple conflict detection strategy for scheduled tasks").
+
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+- Example rejected suggestion: Copilot proposed automatically splitting long tasks to fit the schedule. I rejected this for the initial implementation because it would complicate scheduling semantics and increase testing surface; instead I preferred clear warnings and deterministic behavior. I evaluated this by writing unit tests and choosing the simpler path that is easier to reason about.
+
+**c. Copilot features and workflow**
+
+- Inline Chat: used to iterate quickly on small code changes and ask targeted questions about the local file (e.g., how to sort a plan by start time).
+- Agent Mode / Multi-file edits: used for larger refactors or when creating multiple files like `main.py`, `tests`, and `pawpal_system.py` skeletons.
+- Suggestion review: I kept suggestions that were clear and testable, and modified or rejected suggestions that risked adding hidden state or unnecessary complexity.
+
+Using separate chat sessions per phase helped keep prompts focused (design → implementation → testing → polish). That separation made it easier to reproduce the reasoning for each phase and roll back if a change didn't work.
+
+**d. Lead architect takeaways**
+
+- Being the lead architect means making tradeoffs: prefer deterministic, testable features first (sorting, warnings, recurrence) before adding complex automation (task splitting, constraint solvers). AI accelerates drafting and brainstorming, but human judgment guided what to accept.
 
 ---
 

@@ -118,13 +118,32 @@ if st.button("Generate schedule"):
     else:
         owner = st.session_state.owner
         scheduler = Scheduler()
-        plan = scheduler.generate_daily_plan(owner, date.today(), available_minutes=8 * 60)
-        if not plan:
-            st.info("No scheduled tasks (none fit or no tasks).")
-        else:
-            st.markdown("### Today's Schedule")
-            for item in plan:
-                start = item["start"].strftime("%H:%M")
-                end = item["end"].strftime("%H:%M") if item["end"] != item["start"] else start
-                task = item["task"]
-                st.write(f"{start} - {end}: {item['pet_name']} — {task.title} ({task.duration_minutes}m) [priority={task.priority}]")
+            plan = scheduler.generate_daily_plan(owner, date.today(), available_minutes=8 * 60)
+            if not plan:
+                st.info("No scheduled tasks (none fit or no tasks).")
+            else:
+                # Sort and present schedule in a table for readability
+                sorted_plan = scheduler.sort_by_time(plan)
+                rows = []
+                for item in sorted_plan:
+                    rows.append({
+                        "start": item["start"].strftime("%H:%M"),
+                        "end": item["end"].strftime("%H:%M") if item["end"] != item["start"] else item["start"].strftime("%H:%M"),
+                        "pet": item["pet_name"],
+                        "task": item["task"].title,
+                        "duration_mins": item["task"].duration_minutes,
+                        "priority": item["task"].priority,
+                    })
+
+                st.markdown("### Today's Schedule")
+                st.table(rows)
+
+                # Conflict detection
+                overlap_warnings = scheduler.detect_conflicts(sorted_plan)
+                due_warnings = scheduler.detect_due_time_conflicts(owner)
+                all_warnings = overlap_warnings + due_warnings
+                if all_warnings:
+                    for w in all_warnings:
+                        st.warning(w)
+                else:
+                    st.success("No scheduling conflicts detected.")
