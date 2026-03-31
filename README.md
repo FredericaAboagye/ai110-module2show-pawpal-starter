@@ -72,6 +72,6 @@ Confidence Level: ★★★☆☆ (3/5) — basic behaviors are covered; more ed
 
 To include an app screenshot, export a screenshot of the running Streamlit app and save it under `/course_images/ai110/your_screenshot_name.png` then embed it like this:
 
-<a href="/course_images/ai110/your_screenshot_name.png" target="_blank"><img src='/course_images/ai110/your_screenshot_name.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+<a href="/course_images/ai110/pawpal_screenshot.png" target="_blank"><img src='/course_images/ai110/pawpal_screenshot.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
 
 If you want the final UML image included, render `class_diagram.mmd` with the Mermaid Live Editor and save it as `uml_final.png` in the project root.
