@@ -39,8 +39,12 @@
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+
+- Tradeoff chosen: lightweight conflict detection vs. full interval scheduling.
+
+- I implemented simple conflict checks: (1) an overlap check on the generated schedule and (2) a due-time equality check across tasks. I deliberately did not implement a full interval-graph-based conflict resolver or preemptive task splitting. That would be more flexible but also more complex and harder to test.
+
+- Why reasonable: for a first iteration the owner benefits more from predictable, deterministic scheduling and clear warnings about exact time clashes. Full overlap resolution and task-splitting are future improvements once basic behavior is stable and covered by tests.
 
 ---
 

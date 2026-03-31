@@ -17,6 +17,25 @@ class Task:
     def mark_complete(self) -> None:
         """Mark the task complete."""
         self.completed = True
+        # If this task is recurring, return a new Task instance for the next occurrence.
+        if self.recurrence in ("daily", "weekly"):
+            delta = timedelta(days=1) if self.recurrence == "daily" else timedelta(weeks=1)
+            new_due = None
+            if self.due_time:
+                new_due = self.due_time + delta
+            # Create a shallow copy with a new id (caller should add it to the pet)
+            new_task = Task(
+                task_id=f"{self.task_id}_next",
+                title=self.title,
+                description=self.description,
+                duration_minutes=self.duration_minutes,
+                priority=self.priority,
+                recurrence=self.recurrence,
+                due_time=new_due,
+                completed=False,
+            )
+            return new_task
+        return None
 
     def reschedule(self, new_time: datetime) -> None:
         """Reschedule the task to a new datetime by updating `due_time`."""
@@ -36,6 +55,18 @@ class Pet:
     def add_task(self, task: Task) -> None:
         """Add a `Task` to this pet's task list."""
         self.tasks.append(task)
+
+    def mark_task_complete(self, task_id: str) -> Optional[Task]:
+        """Mark a task complete by id; if it is recurring, return the generated next Task so caller can add it.
+
+        Returns:
+            Optional[Task]: the newly created recurring task, or None.
+        """
+        for t in self.tasks:
+            if t.task_id == task_id:
+                new_task = t.mark_complete()
+                return new_task
+        return None
 
     def remove_task(self, task_id: str) -> None:
         """Remove a Task by `task_id`. No-op if not found."""
@@ -71,6 +102,22 @@ class Owner:
         for pet in self.pets:
             for t in pet.tasks:
                 out.append((pet, t))
+        return out
+
+    def filter_tasks(self, completed: Optional[bool] = None, pet_name: Optional[str] = None) -> List[Tuple[Pet, Task]]:
+        """Filter tasks by completion status and/or pet name.
+
+        Args:
+            completed: if set, filters tasks by their completed value.
+            pet_name: if set, only returns tasks for the matching pet name.
+        """
+        out: List[Tuple[Pet, Task]] = []
+        for pet, task in self.get_all_tasks():
+            if completed is not None and task.completed != completed:
+                continue
+            if pet_name is not None and pet.name != pet_name:
+                continue
+            out.append((pet, task))
         return out
 
     def get_pets(self) -> List[Pet]:
@@ -129,6 +176,49 @@ class Scheduler:
             })
 
         return schedule
+
+    def sort_by_time(self, plan: List[dict]) -> List[dict]:
+        """Return a copy of `plan` sorted by the `start` datetime."""
+        return sorted(plan, key=lambda i: i["start"])
+
+    def detect_conflicts(self, plan: List[dict]) -> List[str]:
+        """Detect overlapping scheduled items and return warning messages.
+
+        This performs a lightweight check: if two items overlap in time, a warning string is generated.
+        """
+        warnings: List[str] = []
+        # sort by start time to simplify overlap checking
+        ordered = self.sort_by_time(plan)
+        for i in range(len(ordered)):
+            for j in range(i + 1, len(ordered)):
+                a = ordered[i]
+                b = ordered[j]
+                # overlap if a.start < b.end and b.start < a.end
+                if a["start"] < b["end"] and b["start"] < a["end"]:
+                    warnings.append(
+                        f"Conflict: '{a['task'].title}' (pet {a['pet_name']}) overlaps with '{b['task'].title}' (pet {b['pet_name']})"
+                    )
+        return warnings
+
+    def detect_due_time_conflicts(self, owner: Owner) -> List[str]:
+        """Detect tasks across an owner that have identical explicit `due_time` values.
+
+        This is a lightweight check to warn when two tasks are expected at the exact same time.
+        """
+        seen = {}
+        warnings: List[str] = []
+        for pet, task in owner.get_all_tasks():
+            if task.due_time is None:
+                continue
+            key = task.due_time
+            if key in seen:
+                other_pet, other_task = seen[key]
+                warnings.append(
+                    f"Due-time conflict: '{task.title}' (pet {pet.name}) has same due_time as '{other_task.title}' (pet {other_pet.name})"
+                )
+            else:
+                seen[key] = (pet, task)
+        return warnings
 
     def explain_plan(self, plan: List[dict]) -> str:
         """Produce a human-readable explanation of why tasks were scheduled."""
