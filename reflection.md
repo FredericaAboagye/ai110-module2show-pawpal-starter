@@ -4,13 +4,20 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+- I designed four primary classes to model the system and keep the responsibilities focused:
+	- `Owner`: holds owner metadata, contact info, preferences, and a collection of `Pet` objects. Responsible for managing pets and exposing owner-level preferences used by the scheduler.
+	- `Pet` (dataclass): represents a single animal with identifying info, simple medical info, and a list of `Task` instances. Responsible for managing its tasks (add/remove/upcoming queries).
+	- `Task` (dataclass): represents an individual care item (walk, feed, med, grooming). Contains `task_id`, `title`, `duration_minutes`, `priority`, optional `recurrence`/`due_time`, and a `completed` flag. Responsible for small task operations like `mark_complete()` and `reschedule()`.
+	- `Scheduler`: contains scheduling logic to generate a daily plan for an `Owner` (examining their pets' `Task`s and owner preferences). Responsible for `generate_daily_plan()`, `score_task()` and `explain_plan()`.
+
+	The responsibilities follow a separation-of-concerns approach: data containers (`Pet`, `Task`) are lightweight dataclasses, `Owner` is the aggregate root for user data, and `Scheduler` is the pure logic layer that reads domain objects and produces schedules.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+
+- No changes yet. This draft is the initial skeleton mapped directly from the UML.
+
+- Next step: ask Copilot to review the skeleton in `#file:pawpal_system.py` and suggest missing relationships or potential bottlenecks (for example: task dependencies, owner-level concurrency constraints, or a need for a `Schedule`/`ScheduledTask` value object).
 
 ---
 

@@ -1,0 +1,46 @@
+classDiagram
+    class Owner {
+      +str owner_id
+      +str name
+      +dict preferences
+      +list~Pet~ pets
+      +add_pet(pet)
+      +remove_pet(pet_id)
+      +get_pets()
+    }
+
+    class Pet {
+      +str pet_id
+      +str name
+      +str species
+      +str breed
+      +int age
+      +list~Task~ tasks
+      +add_task(task)
+      +remove_task(task_id)
+      +upcoming_tasks()
+    }
+
+    class Task {
+      +str task_id
+      +str title
+      +str description
+      +int duration_minutes
+      +int priority
+      +str recurrence
+      +bool completed
+      +mark_complete()
+      +reschedule(datetime)
+    }
+
+    class Scheduler {
+      +generate_daily_plan(owner, date)
+      +explain_plan(plan)
+      +score_task(task, constraints)
+    }
+
+    Owner "1" -- "*" Pet : owns
+    Pet "1" -- "*" Task : has
+    Scheduler ..> Owner : reads
+    Scheduler ..> Pet : reads
+    Scheduler ..> Task : schedules
